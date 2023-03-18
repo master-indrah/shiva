@@ -1,0 +1,5 @@
+cp /root/trojan/trojan-go.service /usr/lib/systemd/system/
+
+systemctl enable --now trojan-go
+
+systemctl status trojan-go

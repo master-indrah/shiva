@@ -1,0 +1,29 @@
+apt install -y nginx net-tools vim unzip curl
+
+
+nginx -s reload
+
+mkdir -p /root/download
+cd /root/download
+
+wget https://github.com/go-gost/gost/releases/download/v3.0.0-rc6/gost_3.0.0-rc6_linux_amd64.tar.gz
+
+wget https://github.com/p4gefau1t/trojan-go/releases/download/v0.10.6/trojan-go-linux-amd64.zip
+
+mv gost_3.0.0-rc6_linux_amd64.tar.gz /root/gost
+
+mv trojan-go-linux-amd64.zip /root/trojan
+
+cd /root/trojan
+unzip trojan-go-linux-amd64.zip
+
+cp /root/indrah-master/t_server.yaml /root/trojan
+
+nohup ./trojan-go -config t_server.yaml >t_log.log &
+
+
+cd /root/gost
+tar -zxvf gost_3.0.0-rc6_linux_amd64.tar.gz
+
+
+

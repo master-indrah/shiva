@@ -1,0 +1,12 @@
+apt install firewalld
+
+firewall-cmd --permanent --add-port=443/tcp
+firewall-cmd --permanent --add-port=80/tcp
+firewall-cmd --permanent --add-port=1234/tcp
+
+firewall-cmd --permanent --add-port=10000-60000/tcp
+firewall-cmd --permanent --add-port=10000-60000/udp
+
+firewall-cmd --add-masquerade --permanent
+
+firewall-cmd --permanent --zone=public --add-forward-port=port=24430-24630:proto=tcp:toport=443
