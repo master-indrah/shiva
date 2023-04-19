@@ -20,7 +20,7 @@ shadowsocks:
   enabled: true
   method: AES-128-GCM
   password: e=2.7182818284590
-websockets:
+websocket:
   enabled: true
   path: /wss
   host: 'panda.eatfat.xyz'

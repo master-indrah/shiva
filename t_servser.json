@@ -1,0 +1,36 @@
+{
+  "run_type": "server",
+  "local_addr": "0.0.0.0",
+  "local_port": 443,
+  "remote_addr": "127.0.0.1",
+  "remote_port": 80,
+  "password": [
+      "yikouyigepangzi"
+  ],
+  "ssl": {
+      "cert": "/root/cert/eat_cert.pem",
+      "key": "/root/cert/eat_key.pem",
+      "sni": "monkey.eatfat.xyz",
+      "fallback_addr": "127.0.0.1",
+      "fallback_port": 1234
+  },
+  "router": {
+      "enabled": true,
+      "block": [
+          "geoip:private"
+      ],
+      "geoip": "/root/trojan/geoip.dat",
+      "geosite": "/root/trojan/geosite.dat"
+  },
+  "shadowsocks": {
+    "enabled": true,
+    "method": "AES-128-GCM",
+    "password": "e=2.7182818284590"
+  },
+  "websocket": {
+    "enabled": true,
+    "path": "/wss",
+    "host": "monkey.eatfat.xyz"
+  }
+}
+
