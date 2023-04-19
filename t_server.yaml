@@ -6,8 +6,8 @@ remote-port: 80
 password:
   - yikouyigepangzi
 ssl:
-  cert: /root/cert/cert.pem
-  key: /root/cert/key.pem
+  cert: /root/cert/eat_cert.pem
+  key: /root/cert/eat_key.pem
   sni: panda.eatfat.xyz
   fallback_port: 1234
 router:
@@ -20,4 +20,8 @@ shadowsocks:
   enabled: true
   method: AES-128-GCM
   password: e=2.7182818284590
+websockets:
+  enabled: true
+  path: /wss
+  host: 'panda.eatfat.xyz'
 
