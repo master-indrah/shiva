@@ -1,0 +1,142 @@
+warp install
+
+wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh
+
+
+第一步：清理失效/被封的 IPv4 配置
+为了防止残留的 IPv4 路由干扰 WARP 的安装，我们需要将系统环境清理为纯 IPv6 状态。
+
+1. 备份网络配置（强烈推荐）
+在修改系统文件前，养成备份的好习惯：
+
+
+# Ubuntu/Debian 示例
+sudo cp /etc/network/interfaces /etc/network/interfaces.bak 2>/dev/null || echo "No interfaces file"
+sudo cp /etc/netplan/*.yaml /root/ 2>/dev/null || echo "No netplan file"
+2. 移除 IPv4 地址
+您可以选择临时或永久移除。建议先临时移除测试。
+
+方法 A：最快的方法（临时生效，重启后复原） 查看当前网络接口名称（通常为 eth0​ 或 ens3 等）：
+
+
+ip addr
+假设您的接口名为 eth0​，IPv4 地址为 1.2.3.4/24，执行以下命令删除：
+
+
+sudo ip addr del 1.2.3.4/24 dev eth0
+注：执行后 SSH 可能会卡死（如果您是用 IPv4 连的），请重新使用 IPv6 连接。
+
+方法 B：永久修改（Debian/Ubuntu） 编辑 /etc/network/interfaces​，找到有关 inet​ (IPv4) 的部分并注释掉，只保留 inet6 部分。
+
+
+nano /etc/network/interfaces
+修改前：
+
+
+auto eth0
+iface eth0 inet static
+    address 1.2.3.4
+    gateway 1.2.3.1
+iface eth0 inet6 static
+    ...
+修改后：
+
+
+auto eth0
+# iface eth0 inet static
+#     address 1.2.3.4
+#     gateway 1.2.3.1
+iface eth0 inet6 static
+    ...
+保存并重启网络服务或重启系统。
+
+3. 验证环境
+确保目前无法通过 IPv4 访问外部网络：
+
+
+ping -4 -c 3 google.com
+如果提示 Network is unreachable 或没有任何反应，说明 IPv4 清理成功。
+同时测试 IPv6 连通性：ping -6 -c 3 google.com 应该通畅。
+第二步：确保 DNS 支持 IPv6
+纯 IPv6 环境下，必须使用支持 IPv6 的 DNS 解析器，否则无法解析域名下载脚本。
+
+使用以下一键命令修改 /etc/resolv.conf 为 Cloudflare 的 IPv6 DNS：
+
+
+sudo bash -c 'echo "nameserver 2606:4700:4700::1111" > /etc/resolv.conf && echo "nameserver 2606:4700:4700::1001" >> /etc/resolv.conf'
+验证 DNS：
+
+
+cat /etc/resolv.conf
+输出应包含上述 2606 开头的地址。
+
+第三步：使用 WARP 脚本恢复双栈
+我们将使用第三方开源工具（fscarmen/warp），在 IPv6 基础上建立一个 WARP 虚拟网卡，接管所有 IPv4 流量。
+
+1. 执行安装脚本
+在终端输入：
+
+
+wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh
+2. 交互配置指南
+脚本启动后，按照以下逻辑进行选择：
+
+语言：选择 1 (简体中文)。
+
+安装方式：选择 1. 安装 / 切换 WARP 网络模式。
+
+检测环境：脚本会自动识别本机为 IPv6-Only 环境。
+
+模式选择：
+
+推荐选择：添加 IPv4 代理接口 (或显示为 WARP IPv4 单栈 / 双栈)。
+核心逻辑：我们要保留 Zouter Limited 提供的原生 IPv6，只让 WARP 接管不存在的 IPv4。
+客户端内核：
+
+推荐：Mainstream (wg-quick) 。这是最成熟、占用资源较少的方案。
+优先级设置（关键） ：
+
+脚本会询问优先级别。
+强烈建议选择：IPv6 优先。
+解释：这意味着访问谷歌等支持 IPv6 的网站依然走您的原生线路（速度快、延迟低），只有访问像 GitHub (IPv4) 这样不支持 IPv6 的网站时，才自动走 Cloudflare WARP 隧道。
+3. 等待安装
+脚本会自动安装 WireGuard 工具并配置接口。安装完成后，会显示获得的 WARP IPv4 地址。
+
+第四步：验证双栈恢复情况
+安装完成后，请按顺序检查。
+
+1. 检查网卡状态
+输入命令：
+
+
+ip addr
+你应该能看到一个名为 wgcf​ 或 warp​ 的新网络接口，且拥有一个 172.16.x.x 或类似的内网 IP。
+
+2. 检查出口 IP
+测试 IPv4 (WARP) ：
+
+
+curl -4 ip.p3terx.com
+预期结果：显示 Cloudflare 的 IP（通常以 104.28, 8.21, 104.x 等开头），且所在地显示 Cloudflare 节点位置。
+
+测试 IPv6 (原生) ：
+
+
+curl -6 ip.p3terx.com
+预期结果：显示你实例原本的 IPv6 地址，所在地为你实例的物理位置。
+
+3. 连接性测试
+尝试访问仅 IPv4 的网站（如 GitHub 的 SSH 端口或某些老旧网站）：
+
+
+curl -I -4 https://github.com
+如果返回 HTTP/2 200​ 或 301，说明 IPv4 访问能力已完全恢复。
+
+常见问题与维护
+WARP 安装失败或无法连接？
+
+检查系统时间是否同步：date。WireGuard 对时间非常敏感，时间错误会导致握手失败。
+尝试重启脚本并选择 "卸载"，然后重新安装。
+端口转发问题
+
+请注意，通过 WARP 获得的 IPv4 是 NAT 后的内网 IP，没有公网入站端口。也就是说，你无法通过这个恢复的 IPv4 地址 SSH 连入服务器，也无法建站给只支持 IPv4 的用户访问。它仅能用于服务器主动对外访问 IPv4 网络（如 apt update​、curl​、pip install）。
